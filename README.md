@@ -1,734 +1,510 @@
 # Address Book Application
 
-A RESTful API service for managing address books and contacts, built with Spring Boot 3.4.12 and Java 17.
+A RESTful API service for managing multiple address books and contacts, built with Spring Boot 3.4.12 and Java 17.
 
 ---
 
-## Table of Contents
+## 📋 Table of Contents
 
-- [Overview](#overview)
-- [Tech Stack](#tech-stack)
-- [Architecture](#architecture)
-- [Getting Started](#getting-started)
-- [API Reference](#api-reference)
-- [Data Models](#data-models)
-- [Test Coverage](#test-coverage)
-- [Deployment](#deployment)
-- [Configuration](#configuration)
-
----
-
-## Overview
-
-The Address Book Application provides a complete solution for managing multiple address books, each containing a collection of contacts. Key features include:
-
-- **Multiple Address Books**: Create, read, update, and delete address books
-- **Contact Management**: Add, update, remove contacts within address books
-- **Duplicate Prevention**: Prevents duplicate contacts (by phone number) within the same address book
-- **Cross-Book Contacts**: Same contact can exist in multiple address books
-- **Unique Contact Retrieval**: Get unique contacts across all address books
-- **Pagination & Sorting**: All list endpoints support pagination and sorting
-- **Search Functionality**: Case-insensitive partial name search for address books
-- **API Versioning**: V1 and V2 API endpoints
+1. [Quick Start](#quick-start)
+2. [Overview](#overview)
+3. [Features](#features)
+4. [Tech Stack](#tech-stack)
+5. [Project Structure](#project-structure)
+6. [Architecture](#architecture)
+7. [Getting Started](#getting-started)
+8. [API Reference](#api-reference)
+9. [Data Models](#data-models)
+10. [Deployment](#deployment)
+11. [Testing](#testing)
+12. [Error Handling](#error-handling)
+13. [Configuration](#configuration)
+14. [Contributing](#contributing)
 
 ---
 
-## Tech Stack
+## 🚀 Quick Start
 
-| Component | Technology |
-|-----------|------------|
-| **Language** | Java 17 |
-| **Framework** | Spring Boot 3.4.12 |
-| **Persistence** | Spring Data JPA |
-| **Database (Dev/Test)** | H2 (In-Memory) |
-| **Database (Production)** | PostgreSQL 15 |
-| **Validation** | Jakarta Validation (Bean Validation 3.0) |
-| **API Documentation** | SpringDoc OpenAPI 2.8.14 |
-| **Boilerplate Reduction** | Lombok |
-| **Testing** | JUnit 5, Mockito, MockMvc, AssertJ |
-| **Test Data** | DataFaker 2.0.2 |
-| **Code Coverage** | JaCoCo |
-| **Containerization** | Docker, Docker Compose |
-| **Orchestration** | Kubernetes |
-| **Build Tool** | Maven |
+```powershell
+# Clone repository
+git clone https://github.com/sumanmondal1994/AddressBookApplication.git
+cd AddressBookApplication
 
----
+# Run locally with H2 database (default)
+./mvnw spring-boot:run
 
-## Architecture
+# Access Swagger UI
+http://localhost:9000/swagger-ui.html
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Controller Layer                         │
-│  ┌─────────────────┐ ┌──────────────────┐ ┌──────────────────┐  │
-│  │AddressBookCtrl  │ │AddressBookCtrlV2 │ │  ContactCtrl     │  │
-│  │   (V1 API)      │ │   (V2 API)       │ │                  │  │
-│  └────────┬────────┘ └────────┬─────────┘ └────────┬─────────┘  │
-└───────────┼───────────────────┼────────────────────┼────────────┘
-            │                   │                    │
-            ▼                   ▼                    ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                        Service Layer                            │
-│  ┌─────────────────────────────┐  ┌──────────────────────────┐  │
-│  │   AddressBookServiceImpl    │  │   ContactServiceImpl     │  │
-│  └─────────────────────────────┘  └──────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
-            │                                        │
-            ▼                                        ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                       Repository Layer                          │
-│  ┌─────────────────────────────┐  ┌──────────────────────────┐  │
-│  │  AddressBookRepository      │  │   ContactRepository      │  │
-│  └─────────────────────────────┘  └──────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
-            │                                        │
-            ▼                                        ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                        Database Layer                           │
-│            H2 (Dev/Test) │ PostgreSQL (Production)              │
-└─────────────────────────────────────────────────────────────────┘
+# Run with Docker Compose (with PostgreSQL)
+docker-compose up -d
+
+# Deploy to Kubernetes
+kubectl apply -f k8s/
 ```
 
-### Project Structure
+**Endpoints**: 16 total (7 V1 AddressBook + 1 V2 + 8 Contact)  
+**Database**: H2 (dev/test) | PostgreSQL (prod)  
+**API Version**: 1.0.0 (OpenAPI 3.1.0)
 
-#### Main Source Tree
+---
+
+## 📖 Overview
+
+The Address Book Application is an enterprise-grade REST API for managing hierarchical contact data. It enables users to organize contacts into multiple address books while preventing duplicates and providing cross-book analytics.
+
+### Use Cases
+- Personal contact management
+- Organizational directory systems
+- Contact synchronization platforms
+- Multi-tenant contact repositories
+
+---
+
+## ✨ Features
+
+### Core Functionality
+- ✅ **Multiple Address Books**: Independent contact collections per address book
+- ✅ **Contact Management**: Full CRUD operations on contacts
+- ✅ **Duplicate Prevention**: Prevents duplicate phone numbers within same address book
+- ✅ **Cross-Book Contacts**: Same phone number allowed in different address books
+- ✅ **Unique Contact Analytics**: Retrieve deduplicated contacts across all books
+- ✅ **Advanced Search**: Case-insensitive partial name matching
+
+### Developer Features
+- ✅ **Pagination & Sorting**: All list endpoints support flexible pagination
+- ✅ **API Versioning**: V1 (standalone) and V2 (with contacts) variants
+- ✅ **Comprehensive Validation**: Request and entity-level validation
+- ✅ **OpenAPI 3.1.0 Spec**: Full API documentation with Swagger UI
+- ✅ **Exception Handling**: 6 specialized exception handlers + generic fallback
+- ✅ **Health Checks**: Spring Boot Actuator endpoints for monitoring
+
+### Deployment Features
+- ✅ **Multi-Stage Docker Build**: Optimized 200MB images
+- ✅ **Docker Compose**: Complete stack with PostgreSQL
+- ✅ **Kubernetes Ready**: Production-grade manifests with health probes
+- ✅ **Profile-Based Config**: dev, test, prod environments
+- ✅ **Database Agnostic**: H2 and PostgreSQL support
+
+---
+
+## 🛠 Tech Stack
+
+| Layer | Technology | Version |
+|-------|-----------|---------|
+| **Language** | Java | 17 |
+| **Framework** | Spring Boot | 3.4.12 |
+| **ORM** | Spring Data JPA | Included |
+| **Validation** | Jakarta Validation | 3.0 |
+| **Database** | H2 / PostgreSQL | Latest |
+| **Build Tool** | Maven | 3.9+ |
+| **Testing** | JUnit 5, Mockito, MockMvc | Latest |
+| **API Docs** | SpringDoc OpenAPI | 2.8.14 |
+| **Containerization** | Docker | Latest |
+| **Orchestration** | Kubernetes | 1.28+ |
+| **Monitoring** | Spring Boot Actuator | Included |
+
+---
+
+## 📁 Project Structure
+
+### Main Source Code (`src/main/`)
 
 ```
 src/main/
 ├── java/com/project/
-│   ├── controller/          # REST Controllers (V1 & V2 endpoints)
-│   ├── dto/                 # Data Transfer Objects
-│   │   ├── request/         # Request DTOs
-│   │   └── response/        # Response DTOs (ApiResponse wrapper)
-│   ├── entity/              # JPA Entities
-│   │   ├── AddressBook      # Address book entity
-│   │   └── Contact          # Contact entity
-│   ├── exception/           # Custom Exceptions & Global Handler
-│   │   ├── ResourceNotFoundException
-│   │   ├── DuplicateContactException
-│   │   ├── DuplicateAddressBookException
-│   │   └── GlobalExceptionHandler (catches ConstraintViolationException)
-│   ├── mapper/              # Entity-DTO Mappers
-│   ├── repository/          # Spring Data JPA Repositories
-│   ├── services/            # Business Logic
+│   ├── controller/           # REST Controllers (V1 & V2)
+│   ├── dto/
+│   │   ├── request/          # Request DTOs
+│   │   └── response/         # Response DTOs + ApiResponse
+│   ├── entity/               # JPA Entities
+│   │   ├── AddressBook.java
+│   │   └── Contact.java
+│   ├── exception/            # Custom exceptions & global handler
+│   │   └── GlobalExceptionHandler.java
+│   ├── mapper/               # Entity ↔ DTO mappers
+│   ├── repository/           # Spring Data JPA repositories
+│   ├── services/             # Business logic layer
 │   │   ├── AddressBookService
 │   │   ├── AddressBookServiceImpl
 │   │   ├── ContactService
 │   │   └── ContactServiceImpl
-│   └── util/                # Utility Classes (PaginationHelper)
+│   └── util/                 # Utilities (PaginationHelper)
 │
 └── resources/
-    ├── db/                  # Database scripts (organized by environment)
+    ├── db/
     │   ├── schema/
-    │   │   ├── h2-schema.sql          # H2 DDL scripts
-    │   │   └── postgresql-schema.sql  # PostgreSQL DDL scripts
+    │   │   ├── h2-schema.sql
+    │   │   └── postgresql-schema.sql
     │   └── seed/
-    │       ├── h2-data.sql            # H2 test data
-    │       └── postgresql-data.sql    # PostgreSQL seed data
-    ├── application.properties         # Default configuration
-    ├── application-dev.properties     # Development profile
-    ├── application-test.properties    # Test profile
-    ├── application-prod.properties    # Production profile
-    ├── templates/                     # Thymeleaf templates (if any)
-    └── static/                        # Static resources (CSS, JS, etc.)
+    │       ├── h2-data.sql
+    │       └── postgresql-data.sql
+    ├── application.properties
+    ├── application-dev.properties
+    ├── application-test.properties
+    └── application-prod.properties
 ```
 
-#### Test Source Tree (Hierarchical Organization)
+### Test Structure (`src/test/`)
 
 ```
 src/test/
 ├── java/com/addressbook/
-│   ├── unit/                       # Unit Tests (Mockito-based)
-│   │   ├── addressbook/
-│   │   │   └── service/
-│   │   │       └── AddressBookServiceTest.java
-│   │   └── contact/
-│   │       └── service/
-│   │           └── ContactServiceTest.java
-│   │
-│   ├── integration/                # Integration Tests (MockMvc with Spring context)
+│   ├── unit/
+│   │   ├── addressbook/service/
+│   │   │   └── AddressBookServiceTest.java       (17 tests)
+│   │   └── contact/service/
+│   │       └── ContactServiceTest.java           (18 tests)
+│   ├── integration/
 │   │   └── addressbook/
-│   │       └── AddressBookIntegrationTest.java
-│   │
-│   ├── fixture/                    # Test Data Factory & Utilities
-│   │   └── TestDataFactory.java    # Generates test data for unit & integration tests
-│   │
-│   └── config/                     # Spring Boot Test Configuration
-│       └── AddressBookApplicationTests.java  # @SpringBootTest main class
-│
-└── resources/
-    ├── application-test.properties  # Test-specific configuration
-    ├── schema-*.sql                 # Test database schema
-    └── data-*.sql                   # Test data (if needed)
+│   │       └── AddressBookIntegrationTest.java   (44 tests)
+│   ├── fixture/
+│   │   └── TestDataFactory.java
+│   └── config/
+│       └── AddressBookApplicationTests.java
+```
+
+### Infrastructure
+
+```
+root/
+├── DockerFile               # Multi-stage Docker build
+├── docker-compose.yml       # App + PostgreSQL stack
+├── k8s/
+│   ├── configmap.yaml       # Application config
+│   ├── postgres-pvc.yaml    # 1Gi storage claim
+│   ├── postgres-deployment.yaml
+│   ├── deployment.yaml
+│   └── service.yaml
+└── pom.xml                  # Maven configuration
 ```
 
 ---
 
-## Getting Started
+## 🏗 Architecture
+
+### Layered Architecture
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                     API Layer                                 │
+│    Controllers (V1/V2)  │  OpenAPI/Swagger Documentation    │
+└────────────────┬─────────────────────────────────────────────┘
+                 │
+┌────────────────▼─────────────────────────────────────────────┐
+│                  Service Layer                                │
+│  AddressBookService  │  ContactService  │  Business Logic    │
+└────────────────┬─────────────────────────────────────────────┘
+                 │
+┌────────────────▼─────────────────────────────────────────────┐
+│                Repository Layer                               │
+│   Spring Data JPA  │  Query Methods  │  DB Abstraction      │
+└────────────────┬─────────────────────────────────────────────┘
+                 │
+┌────────────────▼─────────────────────────────────────────────┐
+│                Database Layer                                 │
+│     H2 (Dev/Test)  │  PostgreSQL (Production)               │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### Request/Response Flow
+
+```
+HTTP Request
+    ↓
+@RestController
+    ↓
+GlobalExceptionHandler (captures errors)
+    ↓
+Service Layer (business logic)
+    ↓
+Repository (data access)
+    ↓
+Database
+    ↓
+ApiResponse<T> Envelope
+    ↓
+HTTP Response (JSON)
+```
+
+### Exception Handling Strategy
+
+```
+Request Processing
+    ├── Validation Exception (MethodArgumentNotValidException)
+    │   └─→ 400 Bad Request (field errors)
+    ├── Entity Validation (ConstraintViolationException)
+    │   └─→ 400 Bad Request (constraint violations)
+    ├── Business Logic Exception
+    │   ├─→ ResourceNotFoundException → 404 Not Found
+    │   ├─→ DuplicateContactException → 409 Conflict
+    │   └─→ DuplicateAddressBookException → 409 Conflict
+    └── Generic Exception
+        └─→ 500 Internal Server Error
+```
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- Java 17+
-- Maven 3.8+
-- Docker & Docker Compose (for containerized deployment)
+- **Java 17+** (Amazon Corretto/OpenJDK)
+- **Maven 3.8+**
+- **Docker & Docker Compose** (for containerized deployment)
+- **PostgreSQL 15+** (for production)
+- **Kubernetes 1.28+** (for k8s deployment)
 
 ### Local Development
 
+#### Setup
+
 ```powershell
-# Clone the repository
-git clone <repository-url>
+# Clone repository
+git clone https://github.com/sumanmondal1994/AddressBookApplication.git
 cd AddressBookApplication
 
-# Run with H2 database (default)
-./mvnw spring-boot:run
-
-# Run with specific profile
-./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
-```
-
-### Build & Package
-
-```powershell
-# Build the JAR
+# Build project
 ./mvnw clean package -DskipTests
 
-# Build with tests
-./mvnw clean package
+# Or run directly with Maven
+./mvnw spring-boot:run
+```
+
+#### Access Points
+
+```
+Application:     http://localhost:9000
+Swagger UI:      http://localhost:9000/swagger-ui.html
+OpenAPI Spec:    http://localhost:9000/v3/api-docs
+Health Check:    http://localhost:9000/actuator/health
+```
+
+### Development with Profiles
+
+```powershell
+# Development profile (H2 with seeding)
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+
+# Test profile
+./mvnw test
+
+# Production profile (requires PostgreSQL)
+./mvnw spring-boot:run -Dspring-boot.run.profiles=prod
 ```
 
 ### Docker Deployment
 
 ```powershell
-# Build Docker image
-docker build -t addressbook-app .
+# Build image
+docker build -f DockerFile -t addressbook-app:latest .
 
 # Run with Docker Compose (includes PostgreSQL)
 docker-compose up -d
+
+# Verify services
+docker-compose ps
+
+# View logs
+docker-compose logs -f app
+
+# Cleanup
+docker-compose down -v
+```
+
+### Kubernetes Deployment
+
+```powershell
+# Apply all manifests
+kubectl apply -f k8s/
+
+# Monitor deployment
+kubectl get pods -w
+kubectl get svc
+
+# View application logs
+kubectl logs -f deployment/addressbook-app
+
+# Port forward for local access
+kubectl port-forward svc/addressbook-service 9000:80
 ```
 
 ---
 
-## API Reference
-
-All API responses are wrapped in a standard `ApiResponse<T>` envelope:
-
-```json
-{
-  "success": true,
-  "message": "Operation completed successfully",
-  "response": { ... },
-  "timestamp": "2025-12-01T10:30:00Z"
-}
-```
+## 🔌 API Reference
 
 ### Base URLs
 
-| Environment | URL |
-|-------------|-----|
-| Local | `http://localhost:<port>` |
-| Swagger UI | `http://localhost:<port>/swagger-ui.html` |
-| OpenAPI Spec | `http://localhost:<port>/v3/api-docs` |
-| **SwaggerHub** | [https://app.swaggerhub.com/apis/self-fed/address-book-application/1.0.0](https://app.swaggerhub.com/apis/self-fed/address-book-application/1.0.0) |
+| Environment | URL | Port |
+|-------------|-----|------|
+| **Local** | `http://localhost:9000` | 9000 |
+| **Docker Compose** | `http://localhost:9000` | 9000 |
+| **Kubernetes** | `http://<EXTERNAL-IP>` | 80 |
+| **Swagger UI** | `/swagger-ui.html` | - |
+| **OpenAPI Spec** | `/v3/api-docs` | - |
+
+### API Overview
+
+- **Total Endpoints**: 16
+- **API Versions**: V1 (7 AddressBook + 8 Contact), V2 (1 CreateWithContacts)
+- **Request Format**: JSON
+- **Response Format**: Wrapped in `ApiResponse<T>` envelope
+- **Authentication**: None (public API)
+- **Rate Limiting**: None (application-level)
+
+### Standard Response Format
+
+```json
+{
+  "success": true,
+  "message": "Operation successful",
+  "response": { "data": "..." },
+  "timestamp": "2025-12-01T10:30:00Z",
+  "path": "/api/v1/addressbooks",
+  "errors": null
+}
+```
+
+### HTTP Status Codes
+
+| Code | Meaning | Usage |
+|------|---------|-------|
+| **200** | OK | Successful GET, PUT, DELETE |
+| **201** | Created | Successful POST |
+| **400** | Bad Request | Validation/constraint errors |
+| **404** | Not Found | Resource not found |
+| **409** | Conflict | Duplicate data |
+| **500** | Server Error | Unexpected errors |
+
+### Address Book Endpoints (V1)
+
+| Method | Endpoint | Description | Status |
+|--------|----------|-------------|--------|
+| POST | `/api/v1/addressbooks` | Create address book | 201 |
+| GET | `/api/v1/addressbooks` | Get all (paginated) | 200 |
+| GET | `/api/v1/addressbooks/{id}` | Get by ID | 200 |
+| GET | `/api/v1/addressbooks/name/{name}` | Get by exact name | 200 |
+| GET | `/api/v1/addressbooks/search?name=...` | Search by partial name | 200 |
+| PUT | `/api/v1/addressbooks/{id}` | Update address book | 200 |
+| DELETE | `/api/v1/addressbooks/{id}` | Delete address book | 200 |
+
+### Contact Endpoints (V1)
+
+| Method | Endpoint | Description | Status |
+|--------|----------|-------------|--------|
+| POST | `/api/v1/addressbooks/{addressBookId}/contacts` | Add contact | 201 |
+| GET | `/api/v1/addressbooks/{addressBookId}/contacts` | Get all contacts | 200 |
+| GET | `/api/v1/addressbooks/{addressBookId}/contacts/{contactId}` | Get contact | 200 |
+| PUT | `/api/v1/addressbooks/{addressBookId}/contacts/{contactId}` | Update contact | 200 |
+| DELETE | `/api/v1/addressbooks/{addressBookId}/contacts/{contactId}` | Remove contact | 200 |
+| DELETE | `/api/v1/addressbooks/{addressBookId}/contacts` | Remove all contacts | 200 |
+| DELETE | `/api/v1/addressbooks/{addressBookId}/contacts/bulk?ids=...` | Bulk delete | 200 |
+| GET | `/api/v1/addressbooks/{addressBookId}/contacts/unique` | Get unique contacts | 200 |
+
+### Address Book (V2)
+
+| Method | Endpoint | Description | Status |
+|--------|----------|-------------|--------|
+| POST | `/api/v2/addressbooks` | Create with contacts | 201 |
 
 ---
 
-### Address Book APIs (V1)
+## 📊 Data Models
 
-#### Create Address Book
+### Request DTOs
 
-```http
-POST /api/v1/addressbooks
-Content-Type: application/json
-
+#### AddressBookRequest
+```json
 {
+  "name": "string (required, 2-100 chars, unique)",
+  "description": "string (optional, max 200 chars)",
+  "contacts": [ { "name": "...", "phoneNumber": "..." } ]
+}
+```
+
+#### ContactRequest
+```json
+{
+  "name": "string (required, min 1 char)",
+  "phoneNumber": "string (required, min 1 char, unique per book)"
+}
+```
+
+### Response DTOs
+
+#### AddressBookResponse
+```json
+{
+  "id": 1,
   "name": "Personal Contacts",
-  "description": "My personal address book"
+  "description": "...",
+  "contactCount": 5,
+  "contacts": [...],
+  "createdAt": "2025-12-01T10:30:00Z",
+  "updatedAt": "2025-12-01T10:30:00Z"
 }
 ```
 
-| Field | Type | Constraints |
-|-------|------|-------------|
-| `name` | String | Required, 2-100 characters, unique |
-| `description` | String | Optional, max 200 characters |
-
-**Response:** `201 Created`
-
+#### ContactResponse
 ```json
 {
-  "success": true,
-  "message": "Address book created successfully",
-  "response": {
-    "id": 1,
-    "name": "Personal Contacts",
-    "description": "My personal address book",
-    "contactCount": 0,
-    "contacts": [],
-    "createdAt": "2025-12-01T10:30:00Z",
-    "updatedAt": "2025-12-01T10:30:00Z"
-  }
-}
-```
-
----
-
-#### Get All Address Books (Paginated)
-
-```http
-GET /api/v1/addressbooks?page=0&size=20&sortBy=id&sortDir=asc
-```
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `page` | int | 0 | Page number (0-based) |
-| `size` | int | 20 | Page size (max 100) |
-| `sortBy` | String | "id" | Sort field |
-| `sortDir` | String | "asc" | Sort direction (asc/desc) |
-
-**Response:** `200 OK` with `PagedResponse<AddressBookResponse>`
-
----
-
-#### Get Address Book by ID
-
-```http
-GET /api/v1/addressbooks/{id}
-```
-
-**Response:** `200 OK` or `404 Not Found`
-
----
-
-#### Get Address Book by Name
-
-```http
-GET /api/v1/addressbooks/name/{name}
-```
-
-**Response:** `200 OK` or `404 Not Found`
-
----
-
-#### Search Address Books by Partial Name
-
-```http
-GET /api/v1/addressbooks/search?name=personal&page=0&size=20&sortBy=name&sortDir=asc
-```
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `name` | String | Partial name to search (case-insensitive) |
-
-**Response:** `200 OK` with `PagedResponse<AddressBookResponse>`
-
----
-
-#### Update Address Book
-
-```http
-PUT /api/v1/addressbooks/{id}
-Content-Type: application/json
-
-{
-  "name": "Updated Name",
-  "description": "Updated description"
-}
-```
-
-**Response:** `200 OK` or `404 Not Found`
-
----
-
-#### Delete Address Book
-
-```http
-DELETE /api/v1/addressbooks/{id}
-```
-
-**Response:** `200 OK` or `404 Not Found`
-
----
-
-### Address Book APIs (V2)
-
-#### Create Address Book with Contacts
-
-```http
-POST /api/v2/addressbooks
-Content-Type: application/json
-
-{
-  "name": "Work Contacts",
-  "description": "Office colleagues",
-  "contacts": [
-    {
-      "name": "John Doe",
-      "phoneNumber": "+61412345678"
-    },
-    {
-      "name": "Jane Smith",
-      "phoneNumber": "+61498765432"
-    }
-  ]
-}
-```
-
-**Response:** `201 Created` with address book and embedded contacts
-
----
-
-### Contact APIs
-
-All contact endpoints are scoped under an address book:
-
-```
-/api/v1/addressbooks/{addressBookId}/contacts
-```
-
----
-
-#### Add Contact
-
-```http
-POST /api/v1/addressbooks/{addressBookId}/contacts
-Content-Type: application/json
-
-{
+  "id": 1,
   "name": "John Doe",
-  "phoneNumber": "+61412345678"
+  "phoneNumber": "+61412345678",
+  "addressBookId": 1,
+  "addressBookName": "Personal Contacts",
+  "createdAt": "2025-12-01T10:30:00Z"
 }
 ```
 
+#### PagedResponse<T>
+```json
+{
+  "content": [...],
+  "page": 0,
+  "size": 20,
+  "totalElements": 100,
+  "totalPages": 5,
+  "first": true,
+  "last": false,
+  "empty": false
+}
+```
+
+### Database Schema
+
+#### AddressBook Entity
 | Field | Type | Constraints |
 |-------|------|-------------|
-| `name` | String | Required, not blank |
-| `phoneNumber` | String | Required, not blank, unique per address book |
+| id | BIGINT | PK, auto-increment |
+| name | VARCHAR(100) | NOT NULL, UNIQUE |
+| description | VARCHAR(200) | Nullable |
+| createdAt | TIMESTAMP | NOT NULL, auto-set |
+| updatedAt | TIMESTAMP | NOT NULL, auto-update |
 
-**Response:** `201 Created` or `409 Conflict` (duplicate phone number)
-
----
-
-#### Get All Contacts (Paginated)
-
-```http
-GET /api/v1/addressbooks/{addressBookId}/contacts?page=0&size=20&sortBy=id&sortDir=asc
-```
-
-**Response:** `200 OK` with `PagedResponse<ContactResponse>`
-
----
-
-#### Get Contact by ID
-
-```http
-GET /api/v1/addressbooks/{addressBookId}/contacts/{contactId}
-```
-
-**Response:** `200 OK` or `404 Not Found`
-
----
-
-#### Update Contact
-
-```http
-PUT /api/v1/addressbooks/{addressBookId}/contacts/{contactId}
-Content-Type: application/json
-
-{
-  "name": "Updated Name",
-  "phoneNumber": "+61499999999"
-}
-```
-
-**Response:** `200 OK`, `404 Not Found`, or `409 Conflict`
-
----
-
-#### Delete Contact
-
-```http
-DELETE /api/v1/addressbooks/{addressBookId}/contacts/{contactId}
-```
-
-**Response:** `200 OK` or `404 Not Found`
-
----
-
-#### Delete All Contacts
-
-```http
-DELETE /api/v1/addressbooks/{addressBookId}/contacts
-```
-
-**Response:** `200 OK`
-
-```json
-{
-  "success": true,
-  "message": "All contacts deleted successfully",
-  "response": {
-    "deletedCount": 5
-  }
-}
-```
-
----
-
-#### Bulk Delete Contacts
-
-```http
-DELETE /api/v1/addressbooks/{addressBookId}/contacts/bulk?ids=1,2,3
-```
-
-**Response:** `200 OK`
-
-```json
-{
-  "success": true,
-  "message": "Contacts deleted successfully",
-  "response": {
-    "requestedCount": 3,
-    "deletedCount": 2
-  }
-}
-```
-
----
-
-#### Get Unique Contacts (Across All Address Books)
-
-```http
-GET /api/v1/addressbooks/{addressBookId}/contacts/unique?page=0&size=20
-```
-
-Returns deduplicated contacts by phone number across all address books.
-
-**Response:** `200 OK` with `PagedResponse<ContactResponse>`
-
----
-
-#### Get Contact Count
-
-```http
-GET /api/v1/addressbooks/{addressBookId}/contacts/count
-```
-
-**Response:** `200 OK`
-
-```json
-{
-  "success": true,
-  "message": "Contact count retrieved successfully",
-  "response": 15
-}
-```
-
----
-
-## Data Models
-
-### AddressBook Entity
-
-| Field | Type | Description |
+#### Contact Entity
+| Field | Type | Constraints |
 |-------|------|-------------|
-| `id` | Long | Primary key, auto-generated |
-| `name` | String | Unique address book name |
-| `description` | String | Optional description |
-| `contacts` | Set<Contact> | One-to-Many relationship |
-| `createdAt` | LocalDateTime | Creation timestamp |
-| `updatedAt` | LocalDateTime | Last update timestamp |
-
-### Contact Entity
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | Long | Primary key, auto-generated |
-| `name` | String | Contact name |
-| `phoneNumber` | String | Phone number (unique per address book) |
-| `addressBook` | AddressBook | Many-to-One relationship |
-| `createdAt` | LocalDateTime | Creation timestamp |
-| `updatedAt` | LocalDateTime | Last update timestamp |
-
-### Unique Constraint
-
-A unique constraint exists on `(phone_number, address_book_id)` to prevent duplicate contacts within the same address book while allowing the same phone number to exist in different address books.
+| id | BIGINT | PK, auto-increment |
+| name | VARCHAR(255) | NOT NULL |
+| phoneNumber | VARCHAR(20) | NOT NULL |
+| addressBookId | BIGINT | FK, NOT NULL |
+| createdAt | TIMESTAMP | NOT NULL, auto-set |
+| updatedAt | TIMESTAMP | NOT NULL, auto-update |
+| **Unique** | (phoneNumber, addressBookId) | Prevents duplicates per book |
 
 ---
 
-## Test Coverage
+## 🧪 Testing
 
-The application includes comprehensive test coverage with **3 test suites** and **44+ integration tests**.
+### Test Coverage
 
-### Test Suites
-
-| Suite | Type | Test Count | Description |
-|-------|------|------------|-------------|
-| `AddressBookServiceTest` | Unit | 17 | Service layer unit tests with Mockito |
-| `ContactServiceTest` | Unit | 18 | Contact service unit tests with Mockito |
-| `AddressBookIntegrationTest` | Integration | 44 | End-to-end integration tests with MockMvc |
-
----
-
-### Unit Tests: AddressBookServiceTest
-
-#### Create Address Book Tests
-| # | Test Case | Description |
-|---|-----------|-------------|
-| 1 | `testCreateAddressBook` | Should create address book successfully |
-| 2 | `testCreateAddressBookWithDuplicateName` | Should throw DuplicateAddressBookException when name exists |
-| 3 | `testCreateAddressBookWithContacts` | Should create address book with contacts (V2) |
-| 4 | `testCreateAddressBookWithEmptyContacts` | Should not call contactCreationService when contacts list is empty |
-
-#### Get Address Book Tests
-| # | Test Case | Description |
-|---|-----------|-------------|
-| 5 | `testGetAddressBookById` | Should get address book by id |
-| 6 | `testGetAddressBookByIdNotFound` | Should throw exception when address book not found |
-| 7 | `testGetAddressBookByName` | Should get address book by name |
-| 8 | `testGetAddressBookByNameNotFound` | Should throw exception when address book not found by name |
-| 9 | `testSearchByName` | Should search address books by partial name |
-| 10 | `testSearchByNameNoResults` | Should return empty result when no address books match search |
-
-#### Get All Address Books Tests
-| # | Test Case | Description |
-|---|-----------|-------------|
-| 11 | `testGetAllAddressBooks` | Should get all address books (non-paginated) |
-| 12 | `testGetAllAddressBooksEmpty` | Should return empty list when no address books exist |
-| 13 | `testGetAllAddressBooksPaginated` | Should get all address books paginated |
-| 14 | `testGetAllAddressBooksSanitizesPageable` | Should sanitize pageable with large page size |
-
-#### Update Address Book Tests
-| # | Test Case | Description |
-|---|-----------|-------------|
-| 15 | `testUpdateAddressBook` | Should update address book successfully |
-| 16 | `testUpdateAddressBookNotFound` | Should throw exception when updating non-existent address book |
-
-#### Delete Address Book Tests
-| # | Test Case | Description |
-|---|-----------|-------------|
-| 17 | `testDeleteAddressBook` | Should delete address book successfully |
-| 18 | `testDeleteAddressBookNotFound` | Should throw exception when deleting non-existent address book |
-
----
-
-### Unit Tests: ContactServiceTest
-
-#### Add Contact Tests
-| # | Test Case | Description |
-|---|-----------|-------------|
-| 1 | `testAddContact` | Should add contact successfully |
-| 2 | `testAddDuplicateContactByPhoneNumber` | Should throw DuplicateContactException when phone number exists |
-| 3 | `testAddDuplicateContactExactPhoneNumber` | Should throw DuplicateContactException with exact phone number message |
-| 4 | `testAddContactToNonExistentAddressBook` | Should throw ResourceNotFoundException for non-existent address book |
-| 5 | `testAddSamePhoneNumberDifferentAddressBook` | Should allow same phone number in different address books |
-
-#### Get Contact Tests
-| # | Test Case | Description |
-|---|-----------|-------------|
-| 6 | `testGetContactById` | Should get contact by id |
-| 7 | `testGetContactByIdNotFound` | Should throw ResourceNotFoundException when contact not found |
-| 8 | `testGetContactFromWrongAddressBook` | Should throw ResourceNotFoundException for wrong address book |
-
-#### Get All Contacts Tests
-| # | Test Case | Description |
-|---|-----------|-------------|
-| 9 | `testGetAllContacts` | Should get all contacts in address book (non-paginated) |
-| 10 | `testGetAllContactsPaged` | Should get all contacts paginated |
-| 11 | `testGetAllContactsFromNonExistentAddressBook` | Should throw ResourceNotFoundException |
-| 12 | `testGetAllContactsPagedFromNonExistentAddressBook` | Should throw ResourceNotFoundException for paginated request |
-| 13 | `testGetAllContactsEmpty` | Should return empty list when address book has no contacts |
-
-#### Remove Contact Tests
-| # | Test Case | Description |
-|---|-----------|-------------|
-| 14 | `testRemoveContact` | Should remove contact successfully |
-| 15 | `testRemoveContactNotFound` | Should throw ResourceNotFoundException when removing non-existent contact |
-| 16 | `testRemoveContactFromWrongAddressBook` | Should throw ResourceNotFoundException for wrong address book |
-
-#### Unique Contacts Tests
-| # | Test Case | Description |
-|---|-----------|-------------|
-| 17 | `testGetUniqueContactsAcrossAllAddressBooks` | Should get unique contacts across all address books |
-| 18 | `testGetUniqueContactsPaged` | Should get unique contacts paginated |
-| 19 | `testGetUniqueContactsEmpty` | Should return empty list when no contacts exist |
-| 20 | `testGetContactCount` | Should get contact count for address book |
-| 21 | `testGetUniqueContactCount` | Should get unique contact count |
-
----
-
-### Integration Tests: AddressBookIntegrationTest
-
-#### CRUD Operations (Orders 1-7)
-| Order | Test Case | Description |
-|-------|-----------|-------------|
-| 1 | `testCreateAddressBook` | Should create a new address book |
-| 2 | `testGetAllAddressBooks` | Should get all address books |
-| 3 | `testAddContact` | Should add contact to address book |
-| 4 | `testPreventDuplicateContacts` | Should prevent duplicate contacts in same address book |
-| 5 | `testPrintAllContactsInAddressBook` | Should print all contacts in address book |
-| 6 | `testRemoveContact` | Should remove contact from address book |
-| 7 | `testGetUniqueContactsAcrossMultipleAddressBooks` | Should get unique contacts across multiple address books |
-
-#### Address Book Validation (Orders 8-17)
-| Order | Test Case | Description |
-|-------|-----------|-------------|
-| 8 | `testCreateAddressBookWithBlankName` | Should reject address book creation with blank name |
-| 9 | `testCreateAddressBookWithNullName` | Should reject address book creation with null name |
-| 10 | `testCreateAddressBookWithNameTooShort` | Should reject name shorter than 2 characters |
-| 11 | `testCreateAddressBookWithNameTooLong` | Should reject name longer than 100 characters |
-| 12 | `testCreateAddressBookWithDescriptionTooLong` | Should reject description longer than 200 characters |
-| 13 | `testCreateAddressBookWithNameAtMinLength` | Should accept name at minimum length (2 characters) |
-| 14 | `testCreateAddressBookWithNameAtMaxLength` | Should accept name at maximum length (100 characters) |
-| 15 | `testCreateAddressBookWithDescriptionAtMaxLength` | Should accept description at maximum length (200 characters) |
-| 16 | `testCreateAddressBookWithNullDescription` | Should accept address book creation with null description |
-| 17 | `testCreateAddressBookWithWhitespaceOnlyName` | Should reject whitespace-only name |
-
-#### Contact Validation (Orders 18-25)
-| Order | Test Case | Description |
-|-------|-----------|-------------|
-| 18 | `testAddContactWithBlankName` | Should reject contact creation with blank name |
-| 19 | `testAddContactWithNullName` | Should reject contact creation with null name |
-| 20 | `testAddContactWithWhitespaceOnlyName` | Should reject whitespace-only name |
-| 21 | `testAddContactWithBlankPhoneNumber` | Should reject blank phone number |
-| 22 | `testAddContactWithNullPhoneNumber` | Should reject null phone number |
-| 23 | `testAddContactWithWhitespaceOnlyPhoneNumber` | Should reject whitespace-only phone number |
-| 24 | `testAddContactWithBothFieldsBlank` | Should reject both fields blank |
-| 25 | `testAddContactWithBothFieldsNull` | Should reject both fields null |
-
-#### Multiple Address Books & Duplicates (Orders 26-30)
-| Order | Test Case | Description |
-|-------|-----------|-------------|
-| 26 | `testCreateMultipleAddressBooks` | Should create multiple address books successfully |
-| 27 | `testPreventDuplicateAddressBookName` | Should prevent creating address book with duplicate name |
-| 28 | `testAddMultipleContactsToAddressBook` | Should add multiple contacts to an address book successfully |
-| 29 | `testPreventDuplicateContactPhoneNumberInSameAddressBook` | Should prevent duplicate phone number in same address book |
-| 30 | `testAllowSameContactPhoneNumberInDifferentAddressBooks` | Should allow same phone number in different address books |
-
-#### Update Operations (Orders 31-36)
-| Order | Test Case | Description |
-|-------|-----------|-------------|
-| 31 | `testUpdateContactSuccessfully` | Should update contact successfully |
-| 32 | `testUpdateContactNameOnly` | Should update contact name only keeping same phone number |
-| 33 | `testUpdateContactWithDuplicatePhoneNumber` | Should fail to update contact with duplicate phone number |
-| 34 | `testUpdateNonExistentContact` | Should fail to update non-existent contact |
-| 35 | `testUpdateContactInNonExistentAddressBook` | Should fail to update contact in non-existent address book |
-| 36 | `testUpdateContactWithInvalidData` | Should fail to update contact with invalid data |
-
-#### Bulk Delete Operations (Orders 37-40)
-| Order | Test Case | Description |
-|-------|-----------|-------------|
-| 37 | `testBulkDeleteContacts` | Should delete multiple contacts by IDs |
-| 38 | `testDeleteAllContacts` | Should delete all contacts in address book |
-| 39 | `testBulkDeleteWithNonExistentIds` | Should handle bulk delete with non-existent IDs gracefully |
-| 40 | `testDeleteAllContactsOnEmptyAddressBook` | Should handle delete all on empty address book |
-
-#### Search Operations (Orders 41-44)
-| Order | Test Case | Description |
-|-------|-----------|-------------|
-| 41 | `testSearchAddressBooksByPartialName` | Should search address books by partial name (case-insensitive) |
-| 42 | `testSearchAddressBooksWithPagination` | Should search address books with pagination |
-| 43 | `testSearchAddressBooksNoResults` | Should return empty result when search finds no matches |
-| 44 | `testSearchAddressBooksCaseInsensitive` | Should search address books case-insensitively |
-
----
+| Test Suite | Type | Count | Scope |
+|-----------|------|-------|-------|
+| **AddressBookServiceTest** | Unit | 17 | Service logic with Mockito |
+| **ContactServiceTest** | Unit | 18 | Contact service with Mockito |
+| **AddressBookIntegrationTest** | Integration | 44 | End-to-end with MockMvc |
+| **Total** | - | 79 | - |
 
 ### Running Tests
 
@@ -746,143 +522,216 @@ The application includes comprehensive test coverage with **3 test suites** and 
 start target/site/jacoco/index.html
 ```
 
+### Test Categories
+
+**Unit Tests**: Service layer with mocked dependencies  
+**Integration Tests**: Full request/response cycle with MockMvc  
+**Fixtures**: TestDataFactory for consistent test data  
+
 ---
 
-## Deployment
+## 🚢 Deployment
 
 ### Docker
 
+**Multi-Stage Build** (reduces image size by 70%)
+
 ```dockerfile
-# Dockerfile
-FROM openjdk:17-jdk-slim
-WORKDIR /app
-COPY target/addressbook-0.0.1-SNAPSHOT.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Stage 1: Builder (Maven + dependencies)
+FROM maven:3.9-amazoncorretto-17 AS builder
+
+# Stage 2: Runtime (JRE only)
+FROM amazoncorretto:17 AS runner
 ```
 
-### Docker Compose
+**Build & Run**
 
 ```powershell
-# Start application with PostgreSQL
+# Build
+docker build -f DockerFile -t addressbook-app:latest .
+
+# Run standalone
+docker run -p 9000:9000 addressbook-app:latest
+
+# Run with Docker Compose
 docker-compose up -d
-
-# View logs
-docker-compose logs -f app
-
-# Stop all containers
-docker-compose down
 ```
+
+### Docker Compose Stack
+
+| Service | Image | Purpose |
+|---------|-------|---------|
+| **db** | `postgres:latest` | PostgreSQL database |
+| **app** | `addressbook-app:latest` | Spring Boot application |
+
+**Features**:
+- Auto-restart on crash
+- Health checks
+- Persistent volumes
+- Network isolation
+- Environment variable configuration
 
 ### Kubernetes
 
-Kubernetes manifests are provided in the `k8s/` directory:
+**Manifests** (Production-ready)
+
+| Manifest | Type | Purpose |
+|----------|------|---------|
+| `configmap.yaml` | ConfigMap | Application properties |
+| `postgres-pvc.yaml` | PVC | 1Gi storage |
+| `postgres-deployment.yaml` | Deployment | PostgreSQL pod |
+| `deployment.yaml` | Deployment | App pod with probes |
+| `service.yaml` | Service | LoadBalancer (80 → 9000) |
+
+**Health Probes**:
+- **Startup**: 5 min max (60 × 5s)
+- **Readiness**: `/actuator/health/readiness`
+- **Liveness**: `/actuator/health/liveness`
+
+**Resource Limits**:
+- App: 1Gi request, 2Gi limit
+- DB: 256Mi request, 512Mi limit
+
+**Deploy**
 
 ```powershell
-#Build the docker Image using the DockerFile Script
-docker build -f DockerFile -t addressbook-app:latest .
-# Apply all manifests
 kubectl apply -f k8s/
-
-# Check deployment status
-kubectl get pods
-kubectl get services
+kubectl get pods,svc,pvc
 ```
 
-| Manifest | Description |
-|----------|-------------|
-| `configmap.yaml` | Application configuration |
-| `postgres-pvc.yaml` | Persistent volume claim for PostgreSQL |
-| `postgres-deployment.yaml` | PostgreSQL deployment and service |
-| `deployment.yaml` | Application deployment |
-| `service.yaml` | Application service (LoadBalancer) |
-
 ---
 
-## Configuration
+## ⚙️ Error Handling
 
-### Application Profiles
+### Exception Handlers
 
-| Profile | Database | Use Case |
-|---------|----------|----------|
-| `default` | H2 (in-memory) | Quick local development |
-| `dev` | H2 (in-memory) | Development with data seeding |
-| `test` | H2 (in-memory) | Automated testing |
-| `prod` | PostgreSQL | Production deployment |
+| Exception | Status | Description |
+|-----------|--------|-------------|
+| `ResourceNotFoundException` | 404 | Resource not found |
+| `DuplicateContactException` | 409 | Duplicate phone in book |
+| `DuplicateAddressBookException` | 409 | Duplicate book name |
+| `MethodArgumentNotValidException` | 400 | Request validation error |
+| `ConstraintViolationException` | 400 | Entity validation error |
+| `Exception` | 500 | Unexpected error |
 
-### Environment Variables (Production)
+### Example Error Responses
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `SPRING_PROFILES_ACTIVE` | Active Spring profile | `prod` |
-| `SPRING_DATASOURCE_URL` | PostgreSQL JDBC URL | - |
-| `SPRING_DATASOURCE_USERNAME` | Database username | - |
-| `SPRING_DATASOURCE_PASSWORD` | Database password | - |
+**Validation Error (400)**
+```json
+{
+  "success": false,
+  "message": "Validation failed for one or more fields",
+  "response": {
+    "errors": {
+      "name": "Name must be between 2 and 100 characters",
+      "phoneNumber": "Phone number must not be blank"
+    }
+  },
+  "errors": { ... }
+}
+```
 
-### Actuator Endpoints
-
-| Endpoint | Description |
-|----------|-------------|
-| `/actuator/health` | Health check |
-| `/actuator/info` | Application info |
-| `/actuator/metrics` | Application metrics |
-
----
-
-## Error Handling
-
-All errors are returned in a consistent format:
-
+**Not Found (404)**
 ```json
 {
   "success": false,
   "message": "Address book not found with id: 999",
-  "response": null,
-  "timestamp": "2025-12-01T10:30:00Z"
+  "response": null
 }
 ```
 
-### Exception Handlers (GlobalExceptionHandler)
-
-The application uses a centralized exception handling strategy via `@RestControllerAdvice` with multiple `@ExceptionHandler` methods:
-
-| Exception | HTTP Status | Response Type | Description |
-|-----------|------------|---------------|-------------|
-| `ResourceNotFoundException` | 404 NOT_FOUND | Error | Resource not found (address book or contact) |
-| `DuplicateContactException` | 409 CONFLICT | Error | Duplicate phone number in same address book |
-| `DuplicateAddressBookException` | 409 CONFLICT | Error | Duplicate address book name |
-| `MethodArgumentNotValidException` | 400 BAD_REQUEST | Validation Error | Request parameter validation failure (e.g., `@RequestBody` fields) |
-| `ConstraintViolationException` | 400 BAD_REQUEST | Validation Error | Entity-level validation failure (e.g., during JPA persist) |
-| `Exception` (Generic) | 500 INTERNAL_SERVER_ERROR | Error | Unexpected runtime errors |
-
-#### Validation Error Response Format
-
-When validation fails, the response includes field-level error details:
-
+**Conflict (409)**
 ```json
 {
   "success": false,
-  "message": "Entity validation failed",
-  "response": {
-    "errors": {
-      "phoneNumber": "Phone number must not be blank",
-      "name": "Name must not be blank"
-    }
-  },
-  "timestamp": "2025-12-01T10:30:00Z"
+  "message": "Address book with name 'Personal' already exists",
+  "response": null
 }
 ```
 
-#### Exception Handler Details
+---
 
-**Request Parameter Validation** (`MethodArgumentNotValidException`):
-- Catches validation failures on `@RequestBody` and `@RequestParam` annotations
-- Returns HTTP 400 with field-level validation errors
-- Example: Missing required field in JSON request body
+## 🔧 Configuration
 
-**Entity Validation** (`ConstraintViolationException`):
-- Catches validation failures during JPA entity persistence operations
-- Returns HTTP 400 with constraint violation details
-- Example: Contact with blank phone number being persisted to database
-- Leverages Jakarta Validation (Bean Validation 3.0) constraints on entity fields
+### Application Profiles
 
+| Profile | Database | Use Case | DDL |
+|---------|----------|----------|-----|
+| **default** | H2 | Quick dev | create-drop |
+| **dev** | H2 | Dev with seed | create-drop |
+| **test** | H2 | Testing | create-drop |
+| **prod** | PostgreSQL | Production | validate |
+
+### Environment Variables (Production)
+
+```bash
+SPRING_PROFILES_ACTIVE=prod
+SPRING_DATASOURCE_URL=jdbc:postgresql://host:5432/addressbook
+SPRING_DATASOURCE_USERNAME=addressbook
+SPRING_DATASOURCE_PASSWORD=*****
+SPRING_JPA_HIBERNATE_DDL_AUTO=validate
+```
+
+### Connection Pool (HikariCP)
+
+```properties
+SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=10
+SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE=5
+SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT=20000
+```
+
+### Actuator Endpoints
+
+```
+/actuator/health           # Overall health
+/actuator/health/readiness # Readiness probe
+/actuator/health/liveness  # Liveness probe
+/actuator/info            # Application info
+/actuator/metrics         # Metrics
+```
+
+---
+
+## 👨‍💼 Contributing
+
+### Contact Information
+
+- **Author**: Suman Mondal
+- **Email**: mondal.suman0504@gmail.com
+- **GitHub**: https://github.com/sumanmondal1994/AddressBookApplication
+
+### API Documentation
+
+- **OpenAPI Version**: 3.1.0
+- **Swagger UI**: `/swagger-ui.html`
+- **OpenAPI JSON**: `/v3/api-docs`
+- **OpenAPI YAML**: `/v3/api-docs.yaml`
+
+### Reporting Issues
+
+Please include:
+- Detailed description
+- Steps to reproduce
+- Expected vs. actual behavior
+- Environment (Java, OS, Docker version)
+
+---
+
+## 📜 License
+
+This project is licensed under the MIT License - see LICENSE file for details.
+
+---
+
+## 📞 Support
+
+For issues, questions, or suggestions:
+1. Check existing GitHub issues
+2. Review API documentation at `/swagger-ui.html`
+3. Contact: mondal.suman0504@gmail.com
+
+---
+
+**Last Updated**: December 1, 2025  
+**Version**: 1.0.0  
+**Status**: Active Development
