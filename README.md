@@ -88,19 +88,77 @@ The Address Book Application provides a complete solution for managing multiple 
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Package Structure
+### Project Structure
+
+#### Main Source Tree
 
 ```
-com.addressbook.project
-├── controller/          # REST Controllers
-├── dto/                 # Data Transfer Objects
-├── entity/              # JPA Entities
-├── exception/           # Custom Exceptions & Global Handler
-├── mapper/              # Entity-DTO Mappers
-├── repository/          # Spring Data JPA Repositories
-├── services/            # Business Logic
-├── util/                # Utility Classes (PaginationHelper)
-└── factory/             # Test Data Factory (test scope)
+src/main/
+├── java/com/project/
+│   ├── controller/          # REST Controllers (V1 & V2 endpoints)
+│   ├── dto/                 # Data Transfer Objects
+│   │   ├── request/         # Request DTOs
+│   │   └── response/        # Response DTOs (ApiResponse wrapper)
+│   ├── entity/              # JPA Entities
+│   │   ├── AddressBook      # Address book entity
+│   │   └── Contact          # Contact entity
+│   ├── exception/           # Custom Exceptions & Global Handler
+│   │   ├── ResourceNotFoundException
+│   │   ├── DuplicateContactException
+│   │   ├── DuplicateAddressBookException
+│   │   └── GlobalExceptionHandler (catches ConstraintViolationException)
+│   ├── mapper/              # Entity-DTO Mappers
+│   ├── repository/          # Spring Data JPA Repositories
+│   ├── services/            # Business Logic
+│   │   ├── AddressBookService
+│   │   ├── AddressBookServiceImpl
+│   │   ├── ContactService
+│   │   └── ContactServiceImpl
+│   └── util/                # Utility Classes (PaginationHelper)
+│
+└── resources/
+    ├── db/                  # Database scripts (organized by environment)
+    │   ├── schema/
+    │   │   ├── h2-schema.sql          # H2 DDL scripts
+    │   │   └── postgresql-schema.sql  # PostgreSQL DDL scripts
+    │   └── seed/
+    │       ├── h2-data.sql            # H2 test data
+    │       └── postgresql-data.sql    # PostgreSQL seed data
+    ├── application.properties         # Default configuration
+    ├── application-dev.properties     # Development profile
+    ├── application-test.properties    # Test profile
+    ├── application-prod.properties    # Production profile
+    ├── templates/                     # Thymeleaf templates (if any)
+    └── static/                        # Static resources (CSS, JS, etc.)
+```
+
+#### Test Source Tree (Hierarchical Organization)
+
+```
+src/test/
+├── java/com/addressbook/
+│   ├── unit/                       # Unit Tests (Mockito-based)
+│   │   ├── addressbook/
+│   │   │   └── service/
+│   │   │       └── AddressBookServiceTest.java
+│   │   └── contact/
+│   │       └── service/
+│   │           └── ContactServiceTest.java
+│   │
+│   ├── integration/                # Integration Tests (MockMvc with Spring context)
+│   │   └── addressbook/
+│   │       └── AddressBookIntegrationTest.java
+│   │
+│   ├── fixture/                    # Test Data Factory & Utilities
+│   │   └── TestDataFactory.java    # Generates test data for unit & integration tests
+│   │
+│   └── config/                     # Spring Boot Test Configuration
+│       └── AddressBookApplicationTests.java  # @SpringBootTest main class
+│
+└── resources/
+    ├── application-test.properties  # Test-specific configuration
+    ├── schema-*.sql                 # Test database schema
+    └── data-*.sql                   # Test data (if needed)
 ```
 
 ---
@@ -783,4 +841,48 @@ All errors are returned in a consistent format:
   "timestamp": "2025-12-01T10:30:00Z"
 }
 ```
+
+### Exception Handlers (GlobalExceptionHandler)
+
+The application uses a centralized exception handling strategy via `@RestControllerAdvice` with multiple `@ExceptionHandler` methods:
+
+| Exception | HTTP Status | Response Type | Description |
+|-----------|------------|---------------|-------------|
+| `ResourceNotFoundException` | 404 NOT_FOUND | Error | Resource not found (address book or contact) |
+| `DuplicateContactException` | 409 CONFLICT | Error | Duplicate phone number in same address book |
+| `DuplicateAddressBookException` | 409 CONFLICT | Error | Duplicate address book name |
+| `MethodArgumentNotValidException` | 400 BAD_REQUEST | Validation Error | Request parameter validation failure (e.g., `@RequestBody` fields) |
+| `ConstraintViolationException` | 400 BAD_REQUEST | Validation Error | Entity-level validation failure (e.g., during JPA persist) |
+| `Exception` (Generic) | 500 INTERNAL_SERVER_ERROR | Error | Unexpected runtime errors |
+
+#### Validation Error Response Format
+
+When validation fails, the response includes field-level error details:
+
+```json
+{
+  "success": false,
+  "message": "Entity validation failed",
+  "response": {
+    "errors": {
+      "phoneNumber": "Phone number must not be blank",
+      "name": "Name must not be blank"
+    }
+  },
+  "timestamp": "2025-12-01T10:30:00Z"
+}
+```
+
+#### Exception Handler Details
+
+**Request Parameter Validation** (`MethodArgumentNotValidException`):
+- Catches validation failures on `@RequestBody` and `@RequestParam` annotations
+- Returns HTTP 400 with field-level validation errors
+- Example: Missing required field in JSON request body
+
+**Entity Validation** (`ConstraintViolationException`):
+- Catches validation failures during JPA entity persistence operations
+- Returns HTTP 400 with constraint violation details
+- Example: Contact with blank phone number being persisted to database
+- Leverages Jakarta Validation (Bean Validation 3.0) constraints on entity fields
 
