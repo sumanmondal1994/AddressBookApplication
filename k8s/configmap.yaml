@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: addressbook-config
+data:
+  application.properties: |
+    spring.datasource.url=jdbc:postgresql://postgres-service:5432/addressbook
+    spring.datasource.username=addressbook
+    spring.datasource.password=SecurePassword123!
+    spring.jpa.hibernate.ddl-auto=validate
+    spring.sql.init.mode=never

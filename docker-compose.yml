@@ -1,0 +1,89 @@
+services:
+  db:
+    image: postgres:latest
+    container_name: addressbook-db
+    environment:
+      POSTGRES_DB: addressbook
+      POSTGRES_USER: addressbook
+      POSTGRES_PASSWORD: SecurePassword123!
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - addressBookApplication-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U addressbook -d addressbook"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: DockerFile
+    container_name: addressbook-app
+    ports:
+      - "9000:9000"
+    environment:
+      # Database Configuration
+      DATABASE_URL: jdbc:postgresql://db:5432/addressbook
+      DATABASE_USERNAME: addressbook
+      DATABASE_PASSWORD: SecurePassword123!
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      
+      # JPA Configuration
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      SPRING_JPA_DEFER_DATASOURCE_INITIALIZATION: "true"
+      SPRING_JPA_SHOW_SQL: "false"
+      SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: "true"
+      
+      # Application Configuration
+      SPRING_APPLICATION_NAME: AddressBookApplication
+      SERVER_PORT: 9000
+      
+      # Logging Configuration
+      LOGGING_LEVEL_ROOT: INFO
+      LOGGING_LEVEL_COM_ADDRESSBOOK_PROJECT: WARN
+      
+      # SQL Initialization - use PostgreSQL-specific schema and data
+      SPRING_SQL_INIT_MODE: always
+      SPRING_SQL_INIT_SCHEMA_LOCATIONS: classpath:schema-postgresql.sql
+      SPRING_SQL_INIT_DATA_LOCATIONS: classpath:data-postgresql.sql
+      
+      # Swagger/OpenAPI
+      SPRINGDOC_SWAGGER_UI_PATH: /swagger-ui.html
+      SPRINGDOC_API_DOCS_PATH: /api-docs
+      
+      # Security & Performance
+      SPRING_JPA_OPEN_IN_VIEW: "false"
+      SERVER_COMPRESSION_ENABLED: "true"
+      SERVER_HTTP2_ENABLED: "true"
+      
+      # Connection Pool (HikariCP)
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 10
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: 5
+      SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT: 20000
+      SPRING_DATASOURCE_HIKARI_IDLE_TIMEOUT: 300000
+      SPRING_DATASOURCE_HIKARI_MAX_LIFETIME: 1800000
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - addressBookApplication-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  addressBookApplication-network:
+    driver: bridge

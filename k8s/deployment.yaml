@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: addressbook-app
+  labels:
+    app: addressbook
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: addressbook
+  template:
+    metadata:
+      labels:
+        app: addressbook
+    spec:
+      containers:
+      - name: addressbook
+        image: addressbook-app:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9000
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod"
+        - name: DATABASE_URL
+          value: "jdbc:postgresql://postgres-service:5432/addressbook"
+        - name: DATABASE_USERNAME
+          value: "addressbook"
+        - name: DATABASE_PASSWORD
+          value: "SecurePassword123!"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "1000m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+        # Startup probe - allows app up to 5 minutes to start
+        startupProbe:
+          httpGet:
+            path: /actuator/health
+            port: 9000
+          failureThreshold: 60
+          periodSeconds: 5
+        # Readiness probe - checks if app can receive traffic
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 9000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3
+        # Liveness probe - checks if app is still alive
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 9000
+          initialDelaySeconds: 5
+          periodSeconds: 20
+          failureThreshold: 3
