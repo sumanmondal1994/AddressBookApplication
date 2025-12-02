@@ -4,6 +4,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
+import com.project.dto.addressbook.AddressBookIdResponse;
 import com.project.dto.addressbook.AddressBookResponse;
 import com.project.dto.contact.ContactResponse;
 import com.project.entity.addressbook.AddressBook;
@@ -21,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AddressBookMapper implements EntityMapper<AddressBook, AddressBookResponse> {
 
-	private final EntityMapper<Contact,ContactResponse> contactMapper;
+	private final EntityMapper<Contact, ContactResponse> contactMapper;
 
 	@Override
 	public AddressBookResponse mapToResponse(AddressBook addressBook) {
@@ -37,4 +38,5 @@ public class AddressBookMapper implements EntityMapper<AddressBook, AddressBookR
 				.updatedAt(addressBook.getUpdatedAt())
 				.build();
 	}
+
 }

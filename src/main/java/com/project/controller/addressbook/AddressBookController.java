@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.project.dto.addressbook.AddressBookIdResponse;
 import com.project.dto.addressbook.AddressBookRequest;
 import com.project.dto.addressbook.AddressBookResponse;
 import com.project.dto.response.ApiResponse;
@@ -51,7 +52,24 @@ public class AddressBookController {
 		Pageable pageable = PageRequest.of(page, size, sort);
 
 		PagedResponse<AddressBookResponse> pagedResponse = addressBookService.getAllAddressBooks(pageable);
-		return ResponseEntity.ok(ApiResponse.success(pagedResponse, "Address books retrieved successfully"));
+		return ResponseEntity.ok(ApiResponse.success(pagedResponse, "Address books with Contacts retrieved successfully"));
+	}
+	
+	@GetMapping("/all")
+	@Operation(summary = "Get all address book IDs with names (lightweight response)")
+	public ResponseEntity<ApiResponse<PagedResponse<AddressBookIdResponse>>> getAllAddressBookIds(
+	        @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
+	        @Parameter(description = "Page size (max 100)") @RequestParam(defaultValue = "20") int size,
+	        @Parameter(description = "Sort field") @RequestParam(defaultValue = "id") String sortBy,
+	        @Parameter(description = "Sort direction (asc/desc)") @RequestParam(defaultValue = "asc") String sortDir) {
+
+	    Sort sort = sortDir.equalsIgnoreCase("desc")
+	            ? Sort.by(sortBy).descending()
+	            : Sort.by(sortBy).ascending();
+	    Pageable pageable = PageRequest.of(page, size, sort);
+
+	    PagedResponse<AddressBookIdResponse> pagedResponse = addressBookService.getAllAddressBookIds(pageable);
+	    return ResponseEntity.ok(ApiResponse.success(pagedResponse, "Address book IDs retrieved successfully"));
 	}
 
 	@GetMapping("/{id}")

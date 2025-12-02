@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Pageable;
 
+import com.project.dto.addressbook.AddressBookIdResponse;
 import com.project.dto.addressbook.AddressBookResponse;
 import com.project.dto.response.PagedResponse;
 
@@ -18,4 +19,8 @@ public interface AddressBookReadService {
     List<AddressBookResponse> getAllAddressBooks();
 
     PagedResponse<AddressBookResponse> getAllAddressBooks(Pageable pageable);
+
+    List<AddressBookIdResponse> getAllAddressBookIds();
+
+    PagedResponse<AddressBookIdResponse> getAllAddressBookIds(Pageable pageable);
 }

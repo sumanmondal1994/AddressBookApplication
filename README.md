@@ -43,7 +43,7 @@ docker-compose up -d
 kubectl apply -f k8s/
 ```
 
-**Endpoints**: 16 total (7 V1 AddressBook + 1 V2 + 8 Contact)  
+**Endpoints**: 17 total (8 V1 AddressBook + 1 V2 + 8 Contact)  
 **Database**: H2 (dev/test) | PostgreSQL (prod)  
 **API Version**: 1.0.0 (OpenAPI 3.1.0)
 
