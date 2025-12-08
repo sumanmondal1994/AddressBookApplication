@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:latest
+    image: postgres:16-alpine
     container_name: addressbook-db
     environment:
       POSTGRES_DB: addressbook
@@ -48,9 +48,7 @@ services:
       LOGGING_LEVEL_COM_ADDRESSBOOK_PROJECT: WARN
       
       # SQL Initialization - use PostgreSQL-specific schema and data
-      SPRING_SQL_INIT_MODE: always
-      SPRING_SQL_INIT_SCHEMA_LOCATIONS: classpath:schema-postgresql.sql
-      SPRING_SQL_INIT_DATA_LOCATIONS: classpath:data-postgresql.sql
+      SPRING_SQL_INIT_MODE: never
       
       # Swagger/OpenAPI
       SPRINGDOC_SWAGGER_UI_PATH: /swagger-ui.html
