@@ -5,7 +5,12 @@ metadata:
   labels:
     app: addressbook
 spec:
-  replicas: 1
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: addressbook
@@ -14,6 +19,9 @@ spec:
       labels:
         app: addressbook
     spec:
+      securityContext:
+        runAsUser: 1000
+        fsGroup: 2000
       containers:
       - name: addressbook
         image: addressbook-app:latest
@@ -24,15 +32,24 @@ spec:
         - name: SPRING_PROFILES_ACTIVE
           value: "prod"
         - name: DATABASE_URL
-          value: "jdbc:postgresql://postgres-service:5432/addressbook"
+          valueFrom:
+            configMapKeyRef:
+              name: addressbook-config
+              key: DATABASE_URL
         - name: DATABASE_USERNAME
-          value: "addressbook"
+          valueFrom:
+            configMapKeyRef:
+              name: addressbook-config
+              key: DATABASE_USERNAME
         - name: DATABASE_PASSWORD
-          value: "SecurePassword123!"
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: password
         resources:
           requests:
-            memory: "1Gi"
-            cpu: "1000m"
+            memory: "512Mi"
+            cpu: "500m"
           limits:
             memory: "2Gi"
             cpu: "2000m"

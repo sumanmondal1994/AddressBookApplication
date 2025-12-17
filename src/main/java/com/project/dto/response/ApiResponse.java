@@ -37,18 +37,6 @@ public class ApiResponse<T> {
                 .build();
     }
 
-    /**
-     * Create a success response with data and path
-     */
-    public static <T> ApiResponse<T> success(T response, String message, String path) {
-        return ApiResponse.<T>builder()
-                .success(true)
-                .message(message)
-                .response(response)
-                .timestamp(LocalDateTime.now())
-                .path(path)
-                .build();
-    }
 
     /**
      * Create an error response

@@ -3,9 +3,11 @@ kind: ConfigMap
 metadata:
   name: addressbook-config
 data:
+  DATABASE_URL: "jdbc:postgresql://postgres-service:5432/addressbook"
+  DATABASE_USERNAME: "addressbook"
   application.properties: |
-    spring.datasource.url=jdbc:postgresql://postgres-service:5432/addressbook
-    spring.datasource.username=addressbook
-    spring.datasource.password=SecurePassword123!
+    spring.datasource.url=${DATABASE_URL}
+    spring.datasource.username=${DATABASE_USERNAME}
+    spring.datasource.password=${DATABASE_PASSWORD}
     spring.jpa.hibernate.ddl-auto=validate
     spring.sql.init.mode=never
