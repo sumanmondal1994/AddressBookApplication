@@ -18,4 +18,4 @@ COPY --from=builder /app/target/addressbook-0.0.1-SNAPSHOT.jar ./app.jar
 
 EXPOSE 9000
 
-ENTRYPOINT [ "java", "-Dspring.profiles.active=prod", "-jar", "app.jar" ]
+ENTRYPOINT [ "java", "-Dspring.profiles.active=dev", "-jar", "app.jar" ]
