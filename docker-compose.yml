@@ -21,7 +21,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: DockerFile
+      dockerfile: Dockerfile
     container_name: addressbook-app
     ports:
       - "9000:9000"
