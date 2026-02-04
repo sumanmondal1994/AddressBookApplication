@@ -36,6 +36,6 @@ phases:
       - cat imagedefinitions.json
 
 artifacts:
+  name: BuildArtifact
   files:
     - imagedefinitions.json
-    - target/*.jar
